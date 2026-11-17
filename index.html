@@ -24,13 +24,13 @@
                     colors: {
                         espresso: {
                             950: '#16100D',
-                            900: '#1F1713',
-                            800: '#2E221C',
+                            900: '#1E1612',
+                            800: '#2C201A',
                             700: '#46352C',
                         },
                         cream: {
-                            50: '#FBF8F3',
-                            100: '#F5EFE6',
+                            50: '#FAF7F2',
+                            100: '#F4EDE3',
                             200: '#EBE0D0',
                             300: '#DECDB5',
                         },
@@ -53,9 +53,21 @@
     <style>
         /* Özel Kaydırma Çubuğu */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #F5EFE6; }
+        ::-webkit-scrollbar-track { background: #F4EDE3; }
         ::-webkit-scrollbar-thumb { background: #C5A059; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #A6823E; }
+
+        /* Yönetici Butonları ve Modalları İçin Kesin Tıklanabilirlik Garantisi */
+        .admin-trigger-btn {
+            position: relative;
+            z-index: 60;
+            pointer-events: auto !important;
+            cursor: pointer !important;
+        }
+        #admin-auth-modal,
+        #admin-dashboard-modal {
+            z-index: 9999 !important;
+        }
 
         /* Önce & Sonra Kaydırıcı Stilleri */
         .ba-container {
@@ -91,7 +103,7 @@
             transform: translate(-50%, -50%);
             width: 44px;
             height: 44px;
-            background: #1F1713;
+            background: #1E1612;
             border: 2px solid #C5A059;
             border-radius: 50%;
             display: flex;
@@ -105,11 +117,63 @@
             transform: translate(-50%, -50%) scale(1.08);
         }
     </style>
+
+    <!-- ERKEN GLOBAL FONKSİYON TANIMLARI (Sayfa tam yüklenmeden tıklansa bile anında çalışır) -->
+    <script>
+        window.openAdminModal = function(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            var mobileMenu = document.getElementById('mobile-menu');
+            if (mobileMenu) mobileMenu.classList.add('hidden');
+
+            var authError = document.getElementById('admin-auth-error');
+            if (authError) authError.classList.add('hidden');
+
+            var pinInput = document.getElementById('admin-pin-input');
+            if (pinInput) pinInput.value = '';
+
+            var authModal = document.getElementById('admin-auth-modal');
+            if (authModal) {
+                authModal.classList.remove('hidden');
+                authModal.style.display = 'flex';
+                setTimeout(function() {
+                    if (pinInput) pinInput.focus();
+                }, 80);
+            }
+        };
+
+        window.closeAdminModal = function(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            var authModal = document.getElementById('admin-auth-modal');
+            if (authModal) {
+                authModal.classList.add('hidden');
+                authModal.style.display = 'none';
+            }
+        };
+
+        window.closeAdminDashboard = function(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            var dashModal = document.getElementById('admin-dashboard-modal');
+            if (dashModal) {
+                dashModal.classList.add('hidden');
+                dashModal.style.display = 'none';
+            }
+            document.body.classList.remove('overflow-hidden');
+        };
+    </script>
 </head>
 <body class="bg-cream-50 text-espresso-900 font-sans antialiased selection:bg-gold-500 selection:text-white overflow-x-hidden">
 
     <!-- 0. DİNAMİK DUYURU / KAMPANYA ŞERİDİ (Yönetici Panelinden Kontrol Edilir) -->
-    <div id="promo-banner" class="bg-gold-500 text-espresso-950 text-xs sm:text-sm font-semibold py-2 px-4 text-center transition-all">
+    <div id="promo-banner" class="relative z-30 bg-gold-500 text-espresso-950 text-xs sm:text-sm font-semibold py-2 px-4 text-center transition-all">
         <div class="max-w-7xl mx-auto flex items-center justify-center gap-2">
             <i class="fa-solid fa-sparkles"></i>
             <span id="promo-banner-text">Yeni Sezon Balayage & Keratin Bakımlarında %15 Avantaj!</span>
@@ -117,7 +181,7 @@
     </div>
 
     <!-- Üst Bilgi Barı -->
-    <div class="bg-espresso-950 text-cream-200 text-xs py-2 px-4 border-b border-espresso-800">
+    <div class="relative z-30 bg-espresso-950 text-cream-200 text-xs py-2 px-4 border-b border-espresso-800">
         <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
             <div class="flex items-center gap-4">
                 <span><i class="fa-solid fa-location-dot text-gold-500 mr-1.5"></i>Yenişehir / Pozcu, Mersin</span>
@@ -137,8 +201,8 @@
         </div>
     </div>
 
-    <!-- 1. ÜST MENÜ (STICKY HEADER) -->
-    <header class="sticky top-0 z-40 bg-cream-50/95 backdrop-blur-md border-b border-cream-200 transition-all duration-300">
+    <!-- 1. ÜST MENÜ (STICKY HEADER - Yüksek z-index ile hiçbir katmanın altında kalmaz) -->
+    <header class="sticky top-0 z-50 bg-cream-50/95 backdrop-blur-md border-b border-cream-200 transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
                 <!-- Marka Logosu -->
@@ -147,13 +211,13 @@
                         KS
                     </div>
                     <div>
-                        <span class="block font-serif text-2xl font-bold tracking-wide text-espresso-900 leading-none">KUAFÖR SEMİHA</span>
-                        <span class="block text-[10px] uppercase tracking-[0.25em] text-gold-600 font-semibold mt-1">Hair & Beauty Studio • Mersin</span>
+                        <span class="block font-serif text-xl sm:text-2xl font-bold tracking-wide text-espresso-900 leading-none">KUAFÖR SEMİHA</span>
+                        <span class="block text-[10px] uppercase tracking-[0.22em] text-gold-600 font-semibold mt-1">Hair & Beauty Studio • Mersin</span>
                     </div>
                 </a>
 
                 <!-- Masaüstü Navigasyon -->
-                <nav class="hidden lg:flex items-center gap-7 text-sm font-medium text-espresso-800">
+                <nav class="hidden lg:flex items-center gap-6 text-sm font-medium text-espresso-800">
                     <a href="#hizmetler" class="hover:text-gold-600 transition py-2">Hizmetler & Fiyatlar</a>
                     <a href="#donusumler" class="hover:text-gold-600 transition py-2">Önce & Sonra</a>
                     <a href="#ekibimiz" class="hover:text-gold-600 transition py-2">Ekibimiz</a>
@@ -161,11 +225,12 @@
                     <a href="#iletisim" class="hover:text-gold-600 transition py-2">İletişim & Konum</a>
                 </nav>
 
-                <!-- Sağ CTA Butonları + Zarif Yönetici Kilidi -->
+                <!-- Sağ CTA Butonları + Masaüstü Yönetici Butonu -->
                 <div class="flex items-center gap-2.5 sm:gap-3">
-                    <!-- Yönetici Girişi Butonu -->
-                    <button type="button" onclick="openAdminAuth()" aria-label="Yönetici Girişi" title="Yönetici Girişi" class="w-10 h-10 rounded-full border border-cream-300 bg-cream-100/80 hover:bg-espresso-900 text-espresso-700 hover:text-gold-500 flex items-center justify-center transition shadow-sm">
-                        <i class="fa-solid fa-lock text-xs"></i>
+                    <!-- Yönetici Girişi Butonu (Masaüstü & Tablet) -->
+                    <button type="button" id="header-admin-btn" onclick="window.openAdminModal(event)" aria-label="Yönetici Girişi" title="Yönetici Paneli (Şifre: 1234)" class="admin-trigger-btn inline-flex items-center gap-2 px-3.5 py-2.5 rounded-full border border-gold-500/50 bg-cream-100 hover:bg-espresso-900 text-espresso-900 hover:text-gold-400 text-xs font-semibold transition shadow-sm">
+                        <i class="fa-solid fa-lock text-gold-600"></i>
+                        <span class="hidden sm:inline">Yönetici</span>
                     </button>
 
                     <a href="#randevu" class="hidden sm:flex bg-espresso-900 hover:bg-espresso-800 text-cream-50 px-5 py-2.5 rounded-full text-sm font-medium transition shadow-md hover:shadow-lg items-center gap-2 border border-gold-500/40">
@@ -174,7 +239,7 @@
                     </a>
 
                     <!-- Mobil Menü Butonu -->
-                    <button id="mobile-menu-btn" aria-label="Menüyü Aç" class="lg:hidden p-2.5 rounded-xl text-espresso-900 hover:bg-cream-200 transition">
+                    <button type="button" id="mobile-menu-btn" aria-label="Menüyü Aç" class="lg:hidden p-2.5 rounded-xl text-espresso-900 hover:bg-cream-200 transition">
                         <i class="fa-solid fa-bars text-xl"></i>
                     </button>
                 </div>
@@ -182,14 +247,14 @@
         </div>
 
         <!-- Mobil Açılır Menü -->
-        <div id="mobile-menu" class="hidden lg:hidden bg-cream-50 border-b border-cream-200 px-4 pt-2 pb-6 space-y-2 shadow-xl">
+        <div id="mobile-menu" class="hidden lg:hidden bg-cream-50 border-b border-cream-200 px-4 pt-2 pb-6 space-y-2 shadow-xl relative z-50">
             <a href="#hizmetler" class="mobile-nav-link block px-4 py-3 rounded-xl text-base font-medium text-espresso-900 hover:bg-cream-200">Hizmetler & Fiyatlar</a>
             <a href="#donusumler" class="mobile-nav-link block px-4 py-3 rounded-xl text-base font-medium text-espresso-900 hover:bg-cream-200">Önce & Sonra Galerisi</a>
             <a href="#ekibimiz" class="mobile-nav-link block px-4 py-3 rounded-xl text-base font-medium text-espresso-900 hover:bg-cream-200">Ekibimiz</a>
             <a href="#yorumlar" class="mobile-nav-link block px-4 py-3 rounded-xl text-base font-medium text-espresso-900 hover:bg-cream-200">Müşteri Yorumları</a>
             <a href="#iletisim" class="mobile-nav-link block px-4 py-3 rounded-xl text-base font-medium text-espresso-900 hover:bg-cream-200">İletişim & Konum</a>
             <div class="pt-3 grid grid-cols-2 gap-3">
-                <button type="button" onclick="openAdminAuth()" class="flex items-center justify-center gap-2 py-3 rounded-xl border border-espresso-900/30 text-espresso-900 font-medium text-sm">
+                <button type="button" id="mobile-admin-btn" onclick="window.openAdminModal(event)" class="admin-trigger-btn flex items-center justify-center gap-2 py-3 rounded-xl border border-gold-500/60 bg-cream-100 text-espresso-900 font-semibold text-sm">
                     <i class="fa-solid fa-lock text-gold-600"></i> Yönetici Paneli
                 </button>
                 <a href="#randevu" class="mobile-nav-link flex items-center justify-center gap-2 py-3 rounded-xl bg-espresso-900 text-cream-50 font-medium text-sm">
@@ -201,9 +266,9 @@
 
     <!-- 2. HERO BÖLÜMÜ -->
     <section class="relative min-h-[85vh] flex items-center bg-espresso-950 overflow-hidden">
-        <div class="absolute inset-0 z-0">
+        <div class="absolute inset-0 z-0 pointer-events-none">
             <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1920&q=85" 
-                 onerror="this.src='https://placehold.co/1920x1080/1F1713/C5A059?text=Kuafor+Semiha+Mersin'" 
+                 onerror="this.src='https://placehold.co/1920x1080/1E1612/C5A059?text=Kuafor+Semiha+Mersin'" 
                  alt="Kuaför Semiha Mersin Lüks Salon Atmosferi" 
                  class="w-full h-full object-cover object-center opacity-45 scale-105">
             <div class="absolute inset-0 bg-gradient-to-r from-espresso-950 via-espresso-950/85 to-espresso-950/30"></div>
@@ -263,16 +328,16 @@
 
             <!-- Kategori Sekmeleri -->
             <div id="service-tabs" class="flex flex-wrap justify-center gap-2 sm:gap-3 mb-10">
-                <button data-category="kesim" class="service-tab-btn active px-5 py-3 rounded-full text-sm font-medium transition bg-espresso-900 text-cream-50 shadow-md">
+                <button type="button" data-category="kesim" class="service-tab-btn active px-5 py-3 rounded-full text-sm font-medium transition bg-espresso-900 text-cream-50 shadow-md">
                     <i class="fa-solid fa-scissors mr-2 text-gold-500"></i>Saç Tasarım & Kesim
                 </button>
-                <button data-category="renk" class="service-tab-btn px-5 py-3 rounded-full text-sm font-medium transition bg-cream-200/70 text-espresso-800 hover:bg-cream-200">
+                <button type="button" data-category="renk" class="service-tab-btn px-5 py-3 rounded-full text-sm font-medium transition bg-cream-200/70 text-espresso-800 hover:bg-cream-200">
                     <i class="fa-solid fa-wand-magic-sparkles mr-2 text-gold-600"></i>Renklendirme & Balayage
                 </button>
-                <button data-category="bakim" class="service-tab-btn px-5 py-3 rounded-full text-sm font-medium transition bg-cream-200/70 text-espresso-800 hover:bg-cream-200">
+                <button type="button" data-category="bakim" class="service-tab-btn px-5 py-3 rounded-full text-sm font-medium transition bg-cream-200/70 text-espresso-800 hover:bg-cream-200">
                     <i class="fa-solid fa-spa mr-2 text-gold-600"></i>Bakım & Keratin
                 </button>
-                <button data-category="gelin" class="service-tab-btn px-5 py-3 rounded-full text-sm font-medium transition bg-cream-200/70 text-espresso-800 hover:bg-cream-200">
+                <button type="button" data-category="gelin" class="service-tab-btn px-5 py-3 rounded-full text-sm font-medium transition bg-cream-200/70 text-espresso-800 hover:bg-cream-200">
                     <i class="fa-solid fa-crown mr-2 text-gold-600"></i>Gelin & Özel Gün
                 </button>
             </div>
@@ -304,7 +369,7 @@
                 <div class="bg-espresso-950/70 p-5 sm:p-6 rounded-3xl border border-espresso-800">
                     <div class="ba-container rounded-2xl h-[380px] sm:h-[430px] w-full" data-ba-slider>
                         <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=900&q=85" 
-                             onerror="this.src='https://placehold.co/900x600/2E221C/C5A059?text=SONRA+-+Balayage+Tasarimi'" 
+                             onerror="this.src='https://placehold.co/900x600/2C201A/C5A059?text=SONRA+-+Balayage+Tasarimi'" 
                              alt="Sonra - Doğal Balayage" 
                              class="w-full h-full object-cover">
                         <span class="absolute top-4 right-4 z-10 bg-gold-500 text-espresso-950 text-xs font-bold px-3 py-1 rounded-full shadow">SONRA</span>
@@ -326,7 +391,7 @@
                             <h3 class="font-serif text-2xl font-semibold text-gold-300">Sıcak Bal Köpüğü Balayage & Olaplex</h3>
                             <p class="text-cream-300 text-sm mt-1">Uzman: Ece Demir • İşlem Süresi: 3.5 Saat</p>
                         </div>
-                        <button onclick="selectServiceAndScroll('renk')" class="text-xs font-semibold text-gold-400 hover:text-gold-300 underline underline-offset-4">
+                        <button type="button" onclick="selectServiceAndScroll('renk')" class="text-xs font-semibold text-gold-400 hover:text-gold-300 underline underline-offset-4">
                             Bu Kategoriden Randevu Al →
                         </button>
                     </div>
@@ -336,7 +401,7 @@
                 <div class="bg-espresso-950/70 p-5 sm:p-6 rounded-3xl border border-espresso-800">
                     <div class="ba-container rounded-2xl h-[380px] sm:h-[430px] w-full" data-ba-slider>
                         <img src="https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=900&q=85" 
-                             onerror="this.src='https://placehold.co/900x600/2E221C/C5A059?text=SONRA+-+Anatomik+Kesim'" 
+                             onerror="this.src='https://placehold.co/900x600/2C201A/C5A059?text=SONRA+-+Anatomik+Kesim'" 
                              alt="Sonra - Modern Katlı Kesim" 
                              class="w-full h-full object-cover">
                         <span class="absolute top-4 right-4 z-10 bg-gold-500 text-espresso-950 text-xs font-bold px-3 py-1 rounded-full shadow">SONRA</span>
@@ -358,7 +423,7 @@
                             <h3 class="font-serif text-2xl font-semibold text-gold-300">Anatomik Katlı Kesim & Keratin Işıltısı</h3>
                             <p class="text-cream-300 text-sm mt-1">Uzman: Semiha Yılmaz • İşlem Süresi: 1.5 Saat</p>
                         </div>
-                        <button onclick="selectServiceAndScroll('kesim')" class="text-xs font-semibold text-gold-400 hover:text-gold-300 underline underline-offset-4">
+                        <button type="button" onclick="selectServiceAndScroll('kesim')" class="text-xs font-semibold text-gold-400 hover:text-gold-300 underline underline-offset-4">
                             Bu Kategoriden Randevu Al →
                         </button>
                     </div>
@@ -382,60 +447,60 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div class="bg-cream-50 rounded-3xl overflow-hidden shadow-sm border border-cream-200 group hover:shadow-xl transition duration-300">
-                    <div class="relative h-76 overflow-hidden bg-espresso-900">
-                        <img src="https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&w=600&q=80" onerror="this.src='https://placehold.co/600x800/2E221C/C5A059?text=Semiha+Yilmaz'" alt="Semiha Yılmaz" class="w-full h-72 object-cover object-top group-hover:scale-105 transition duration-500">
+                    <div class="relative h-72 overflow-hidden bg-espresso-900">
+                        <img src="https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&w=600&q=80" onerror="this.src='https://placehold.co/600x800/2C201A/C5A059?text=Semiha+Yilmaz'" alt="Semiha Yılmaz" class="w-full h-72 object-cover object-top group-hover:scale-105 transition duration-500">
                         <div class="absolute bottom-3 left-3 bg-espresso-950/85 text-gold-400 text-xs font-medium px-3 py-1 rounded-full border border-gold-500/30">18 Yıl Deneyim</div>
                     </div>
                     <div class="p-6">
                         <h3 class="font-serif text-2xl font-bold text-espresso-900">Semiha Yılmaz</h3>
                         <p class="text-gold-600 text-xs font-semibold uppercase tracking-wider mt-1">Kurucu & Kreatif Direktör</p>
                         <p class="text-espresso-700 text-sm mt-3 leading-relaxed">Anatomik kesim, gelin saçı tasarımı ve kişiye özel imaj danışmanlığı uzmanı.</p>
-                        <button onclick="selectSpecialistAndScroll('Semiha Yılmaz')" class="mt-4 w-full py-2.5 rounded-xl border border-espresso-900/20 text-espresso-900 text-xs font-semibold hover:bg-espresso-900 hover:text-cream-50 transition">
+                        <button type="button" onclick="selectSpecialistAndScroll('Semiha Yılmaz')" class="mt-4 w-full py-2.5 rounded-xl border border-espresso-900/20 text-espresso-900 text-xs font-semibold hover:bg-espresso-900 hover:text-cream-50 transition">
                             Semiha Hanım'dan Randevu Al
                         </button>
                     </div>
                 </div>
 
                 <div class="bg-cream-50 rounded-3xl overflow-hidden shadow-sm border border-cream-200 group hover:shadow-xl transition duration-300">
-                    <div class="relative h-76 overflow-hidden bg-espresso-900">
-                        <img src="https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?auto=format&fit=crop&w=600&q=80" onerror="this.src='https://placehold.co/600x800/2E221C/C5A059?text=Ece+Demir'" alt="Ece Demir" class="w-full h-72 object-cover object-top group-hover:scale-105 transition duration-500">
+                    <div class="relative h-72 overflow-hidden bg-espresso-900">
+                        <img src="https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?auto=format&fit=crop&w=600&q=80" onerror="this.src='https://placehold.co/600x800/2C201A/C5A059?text=Ece+Demir'" alt="Ece Demir" class="w-full h-72 object-cover object-top group-hover:scale-105 transition duration-500">
                         <div class="absolute bottom-3 left-3 bg-espresso-950/85 text-gold-400 text-xs font-medium px-3 py-1 rounded-full border border-gold-500/30">11 Yıl Deneyim</div>
                     </div>
                     <div class="p-6">
                         <h3 class="font-serif text-2xl font-bold text-espresso-900">Ece Demir</h3>
                         <p class="text-gold-600 text-xs font-semibold uppercase tracking-wider mt-1">Master Colorist (Renk Uzmanı)</p>
                         <p class="text-espresso-700 text-sm mt-3 leading-relaxed">Doğal geçişli balayage, sombre, brushlight ve Olaplex onarıcı renk açma uzmanı.</p>
-                        <button onclick="selectSpecialistAndScroll('Ece Demir')" class="mt-4 w-full py-2.5 rounded-xl border border-espresso-900/20 text-espresso-900 text-xs font-semibold hover:bg-espresso-900 hover:text-cream-50 transition">
+                        <button type="button" onclick="selectSpecialistAndScroll('Ece Demir')" class="mt-4 w-full py-2.5 rounded-xl border border-espresso-900/20 text-espresso-900 text-xs font-semibold hover:bg-espresso-900 hover:text-cream-50 transition">
                             Ece Hanım'dan Randevu Al
                         </button>
                     </div>
                 </div>
 
                 <div class="bg-cream-50 rounded-3xl overflow-hidden shadow-sm border border-cream-200 group hover:shadow-xl transition duration-300">
-                    <div class="relative h-76 overflow-hidden bg-espresso-900">
-                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80" onerror="this.src='https://placehold.co/600x800/2E221C/C5A059?text=Selin+Kaya'" alt="Selin Kaya" class="w-full h-72 object-cover object-top group-hover:scale-105 transition duration-500">
+                    <div class="relative h-72 overflow-hidden bg-espresso-900">
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80" onerror="this.src='https://placehold.co/600x800/2C201A/C5A059?text=Selin+Kaya'" alt="Selin Kaya" class="w-full h-72 object-cover object-top group-hover:scale-105 transition duration-500">
                         <div class="absolute bottom-3 left-3 bg-espresso-950/85 text-gold-400 text-xs font-medium px-3 py-1 rounded-full border border-gold-500/30">9 Yıl Deneyim</div>
                     </div>
                     <div class="p-6">
                         <h3 class="font-serif text-2xl font-bold text-espresso-900">Selin Kaya</h3>
                         <p class="text-gold-600 text-xs font-semibold uppercase tracking-wider mt-1">Pro Make-Up Artist</p>
                         <p class="text-espresso-700 text-sm mt-3 leading-relaxed">Porselen gelin makyajı, gece makyajı, microblading ve kaş tasarımı uzmanı.</p>
-                        <button onclick="selectSpecialistAndScroll('Selin Kaya')" class="mt-4 w-full py-2.5 rounded-xl border border-espresso-900/20 text-espresso-900 text-xs font-semibold hover:bg-espresso-900 hover:text-cream-50 transition">
+                        <button type="button" onclick="selectSpecialistAndScroll('Selin Kaya')" class="mt-4 w-full py-2.5 rounded-xl border border-espresso-900/20 text-espresso-900 text-xs font-semibold hover:bg-espresso-900 hover:text-cream-50 transition">
                             Selin Hanım'dan Randevu Al
                         </button>
                     </div>
                 </div>
 
                 <div class="bg-cream-50 rounded-3xl overflow-hidden shadow-sm border border-cream-200 group hover:shadow-xl transition duration-300">
-                    <div class="relative h-76 overflow-hidden bg-espresso-900">
-                        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80" onerror="this.src='https://placehold.co/600x800/2E221C/C5A059?text=Zeynep+Arslan'" alt="Zeynep Arslan" class="w-full h-72 object-cover object-top group-hover:scale-105 transition duration-500">
+                    <div class="relative h-72 overflow-hidden bg-espresso-900">
+                        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80" onerror="this.src='https://placehold.co/600x800/2C201A/C5A059?text=Zeynep+Arslan'" alt="Zeynep Arslan" class="w-full h-72 object-cover object-top group-hover:scale-105 transition duration-500">
                         <div class="absolute bottom-3 left-3 bg-espresso-950/85 text-gold-400 text-xs font-medium px-3 py-1 rounded-full border border-gold-500/30">8 Yıl Deneyim</div>
                     </div>
                     <div class="p-6">
                         <h3 class="font-serif text-2xl font-bold text-espresso-900">Zeynep Arslan</h3>
                         <p class="text-gold-600 text-xs font-semibold uppercase tracking-wider mt-1">Bakım & Keratin Uzmanı</p>
                         <p class="text-espresso-700 text-sm mt-3 leading-relaxed">Keratin saç botoksu, Brezilya fönü, medikal cilt bakımı ve spa manikür uzmanı.</p>
-                        <button onclick="selectSpecialistAndScroll('Zeynep Arslan')" class="mt-4 w-full py-2.5 rounded-xl border border-espresso-900/20 text-espresso-900 text-xs font-semibold hover:bg-espresso-900 hover:text-cream-50 transition">
+                        <button type="button" onclick="selectSpecialistAndScroll('Zeynep Arslan')" class="mt-4 w-full py-2.5 rounded-xl border border-espresso-900/20 text-espresso-900 text-xs font-semibold hover:bg-espresso-900 hover:text-cream-50 transition">
                             Zeynep Hanım'dan Randevu Al
                         </button>
                     </div>
@@ -712,8 +777,8 @@
         </div>
     </section>
 
-    <!-- FOOTER (Yönetici Paneli Linki Dahil) -->
-    <footer class="bg-espresso-950 border-t border-espresso-800/80 text-cream-300 py-10 pb-24 sm:pb-10">
+    <!-- FOOTER (Yönetici Paneli Butonu Dahil - Yüksek z-index ile kesin tıklanabilir) -->
+    <footer class="relative z-40 bg-espresso-950 border-t border-espresso-800/80 text-cream-300 py-10 pb-28 sm:pb-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6 text-xs sm:text-sm">
             <div class="flex items-center gap-3">
                 <span class="font-serif text-xl font-bold text-cream-50">KUAFÖR SEMİHA</span>
@@ -724,7 +789,7 @@
                 <a href="#hizmetler" class="hover:text-gold-400 transition">Hizmetler</a>
                 <a href="#donusumler" class="hover:text-gold-400 transition">Galeri</a>
                 <a href="#randevu" class="hover:text-gold-400 transition">Online Randevu</a>
-                <button type="button" onclick="openAdminAuth()" class="text-gold-500 hover:text-gold-400 font-medium flex items-center gap-1.5 transition">
+                <button type="button" id="footer-admin-btn" onclick="window.openAdminModal(event)" class="admin-trigger-btn px-4 py-2 rounded-full bg-espresso-900 hover:bg-espresso-800 border border-gold-500/40 text-gold-400 hover:text-gold-300 font-semibold flex items-center gap-1.5 transition shadow">
                     <i class="fa-solid fa-lock text-xs"></i>
                     <span>Yönetici Paneli</span>
                 </button>
@@ -749,10 +814,10 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- YÖNETİCİ PIN / ŞİFRE GİRİŞ MODALI (Şifre: 1234)                        -->
+    <!-- YÖNETİCİ PIN / ŞİFRE GİRİŞ MODALI (z-index: 9999 | Şifre: 1234)        -->
     <!-- ===================================================================== -->
-    <div id="admin-auth-modal" class="hidden fixed inset-0 z-50 bg-espresso-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-cream-50 w-full max-w-md rounded-3xl shadow-2xl border border-gold-500/40 overflow-hidden">
+    <div id="admin-auth-modal" style="z-index: 9999;" class="hidden fixed inset-0 bg-espresso-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-cream-50 w-full max-w-md rounded-3xl shadow-2xl border border-gold-500/50 overflow-hidden relative">
             <div class="bg-espresso-900 px-6 py-5 flex items-center justify-between border-b border-espresso-800">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-full bg-gold-500/20 border border-gold-500 flex items-center justify-center text-gold-500">
@@ -763,19 +828,19 @@
                         <span class="text-[11px] text-gold-400">Kuaför Semiha Yönetim Sistemi</span>
                     </div>
                 </div>
-                <button type="button" onclick="closeAdminAuth()" class="text-cream-300 hover:text-white p-2">
+                <button type="button" onclick="window.closeAdminModal(event)" class="text-cream-300 hover:text-white p-2 cursor-pointer">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
-            <form id="admin-auth-form" class="p-6 sm:p-8 space-y-5">
+            <form id="admin-auth-form" onsubmit="window.checkAdminLogin(event)" class="p-6 sm:p-8 space-y-5">
                 <p class="text-sm text-espresso-700 text-center">
                     Randevuları yönetmek, fiyatları güncellemek ve kampanya duyurularını düzenlemek için lütfen yönetici şifresini giriniz.
                 </p>
 
                 <div>
                     <label for="admin-pin-input" class="block text-xs font-bold uppercase tracking-wider text-espresso-800 mb-2 text-center">Yönetici Şifresi (PIN)</label>
-                    <input type="password" id="admin-pin-input" maxlength="8" placeholder="••••" required autocomplete="off"
+                    <input type="password" id="admin-pin-input" inputmode="numeric" maxlength="8" placeholder="••••" required autocomplete="off"
                            class="w-full text-center tracking-[0.5em] text-2xl font-bold py-3.5 px-4 rounded-2xl bg-cream-100 border border-cream-300 text-espresso-900 focus:outline-none focus:border-gold-500">
                 </div>
 
@@ -783,7 +848,7 @@
                     <i class="fa-solid fa-circle-exclamation mr-1"></i> Hatalı şifre girdiniz. Lütfen tekrar deneyin.
                 </div>
 
-                <button type="submit" class="w-full py-3.5 rounded-xl bg-espresso-900 hover:bg-espresso-800 text-cream-50 font-semibold text-sm transition shadow-md flex items-center justify-center gap-2 border border-gold-500/40">
+                <button type="submit" class="w-full py-3.5 rounded-xl bg-espresso-900 hover:bg-espresso-800 text-cream-50 font-semibold text-sm transition shadow-md flex items-center justify-center gap-2 border border-gold-500/40 cursor-pointer">
                     <i class="fa-solid fa-unlock-keyhole text-gold-500"></i>
                     <span>Panele Giriş Yap</span>
                 </button>
@@ -792,9 +857,9 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- TAM İŞLEVSEL YÖNETİCİ PANELİ MODALI                                   -->
+    <!-- TAM İŞLEVSEL YÖNETİCİ PANELİ MODALI (z-index: 9999)                   -->
     <!-- ===================================================================== -->
-    <div id="admin-dashboard-modal" class="hidden fixed inset-0 z-50 bg-espresso-950/90 backdrop-blur-md overflow-y-auto">
+    <div id="admin-dashboard-modal" style="z-index: 9999;" class="hidden fixed inset-0 bg-espresso-950/90 backdrop-blur-md overflow-y-auto">
         <div class="min-h-screen max-w-7xl mx-auto p-3 sm:p-6 lg:p-8 flex flex-col">
             <div class="bg-cream-50 rounded-3xl shadow-2xl border border-gold-500/40 overflow-hidden flex-1 flex flex-col">
                 
@@ -814,11 +879,11 @@
                     </div>
 
                     <div class="flex items-center gap-2.5">
-                        <button type="button" onclick="resetSystemToDefaults()" class="px-3.5 py-2 rounded-xl bg-espresso-800 hover:bg-red-900/60 text-cream-200 hover:text-red-200 text-xs font-medium border border-espresso-700 transition flex items-center gap-1.5" title="Tüm verileri başlangıç ayarlarına döndür">
+                        <button type="button" onclick="window.resetSystemToDefaults()" class="px-3.5 py-2 rounded-xl bg-espresso-800 hover:bg-red-900/60 text-cream-200 hover:text-red-200 text-xs font-medium border border-espresso-700 transition flex items-center gap-1.5 cursor-pointer" title="Tüm verileri başlangıç ayarlarına döndür">
                             <i class="fa-solid fa-rotate-left"></i>
                             <span class="hidden sm:inline">Varsayılanlara Sıfırla</span>
                         </button>
-                        <button type="button" onclick="closeAdminDashboard()" class="px-4 py-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-espresso-950 text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow">
+                        <button type="button" onclick="window.closeAdminDashboard(event)" class="px-4 py-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-espresso-950 text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow cursor-pointer">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>
                             <span>Panelden Çık</span>
                         </button>
@@ -865,15 +930,15 @@
 
                     <!-- YÖNETİM SEKMELERİ (TABS) -->
                     <div class="border-b border-cream-200 flex flex-wrap gap-2">
-                        <button type="button" data-admin-tab="appointments" class="admin-tab-btn px-5 py-3 rounded-t-2xl text-sm font-semibold bg-espresso-900 text-cream-50 transition flex items-center gap-2">
+                        <button type="button" data-admin-tab="appointments" class="admin-tab-btn px-5 py-3 rounded-t-2xl text-sm font-semibold bg-espresso-900 text-cream-50 transition flex items-center gap-2 cursor-pointer">
                             <i class="fa-regular fa-calendar-check text-gold-500"></i>
                             <span>Randevu Yönetimi</span>
                         </button>
-                        <button type="button" data-admin-tab="services" class="admin-tab-btn px-5 py-3 rounded-t-2xl text-sm font-semibold bg-cream-200/70 text-espresso-800 hover:bg-cream-200 transition flex items-center gap-2">
+                        <button type="button" data-admin-tab="services" class="admin-tab-btn px-5 py-3 rounded-t-2xl text-sm font-semibold bg-cream-200/70 text-espresso-800 hover:bg-cream-200 transition flex items-center gap-2 cursor-pointer">
                             <i class="fa-solid fa-tags text-gold-600"></i>
                             <span>Hizmet & Fiyat Yönetimi</span>
                         </button>
-                        <button type="button" data-admin-tab="promo" class="admin-tab-btn px-5 py-3 rounded-t-2xl text-sm font-semibold bg-cream-200/70 text-espresso-800 hover:bg-cream-200 transition flex items-center gap-2">
+                        <button type="button" data-admin-tab="promo" class="admin-tab-btn px-5 py-3 rounded-t-2xl text-sm font-semibold bg-cream-200/70 text-espresso-800 hover:bg-cream-200 transition flex items-center gap-2 cursor-pointer">
                             <i class="fa-solid fa-bullhorn text-gold-600"></i>
                             <span>Salon Duyuru / Kampanya</span>
                         </button>
@@ -885,7 +950,7 @@
                             <h3 class="font-serif text-2xl font-bold text-espresso-900">Gelen & Planlanan Randevular</h3>
                             <div class="flex items-center gap-2 text-xs">
                                 <span class="text-espresso-700 font-medium">Filtre:</span>
-                                <select id="admin-status-filter" onchange="renderAdminAppointments()" class="px-3 py-2 rounded-xl bg-cream-100 border border-cream-300 text-espresso-900 font-medium focus:outline-none">
+                                <select id="admin-status-filter" onchange="window.renderAdminAppointments()" class="px-3 py-2 rounded-xl bg-cream-100 border border-cream-300 text-espresso-900 font-medium focus:outline-none">
                                     <option value="ALL">Tümü</option>
                                     <option value="Bekliyor">Bekleyenler</option>
                                     <option value="Onaylandı">Onaylananlar</option>
@@ -906,16 +971,13 @@
                                         <th class="py-3.5 px-4 font-bold text-right">İşlemler</th>
                                     </tr>
                                 </thead>
-                                <tbody id="admin-appointments-tbody" class="divide-y divide-cream-200 text-sm">
-                                    <!-- JS ile doldurulacak -->
-                                </tbody>
+                                <tbody id="admin-appointments-tbody" class="divide-y divide-cream-200 text-sm"></tbody>
                             </table>
                         </div>
                     </div>
 
                     <!-- C) SEKME 2: HİZMET & FİYAT YÖNETİMİ -->
                     <div id="admin-tab-services" class="admin-tab-content hidden space-y-6">
-                        <!-- Yeni Hizmet Ekleme Formu -->
                         <div class="bg-cream-100 p-5 sm:p-6 rounded-2xl border border-cream-300">
                             <h3 class="font-serif text-xl font-bold text-espresso-900 mb-4 flex items-center gap-2">
                                 <i class="fa-solid fa-plus-circle text-gold-600"></i>
@@ -931,22 +993,19 @@
                                 <input type="text" id="new-srv-name" placeholder="Hizmet Adı (Örn: Kahkül Kesimi)" required class="px-3.5 py-2.5 rounded-xl bg-cream-50 border border-cream-300 text-sm text-espresso-900">
                                 <input type="number" id="new-srv-price" placeholder="Fiyat (TL)" min="50" required class="px-3.5 py-2.5 rounded-xl bg-cream-50 border border-cream-300 text-sm text-espresso-900">
                                 <input type="text" id="new-srv-duration" placeholder="Süre (Örn: 45 Dk)" required class="px-3.5 py-2.5 rounded-xl bg-cream-50 border border-cream-300 text-sm text-espresso-900">
-                                <button type="submit" class="py-2.5 px-4 rounded-xl bg-espresso-900 hover:bg-espresso-800 text-cream-50 font-semibold text-sm transition flex items-center justify-center gap-2">
+                                <button type="submit" class="py-2.5 px-4 rounded-xl bg-espresso-900 hover:bg-espresso-800 text-cream-50 font-semibold text-sm transition flex items-center justify-center gap-2 cursor-pointer">
                                     <i class="fa-solid fa-plus text-gold-500"></i> Ekle
                                 </button>
                                 <input type="text" id="new-srv-desc" placeholder="Kısa hizmet açıklaması..." required class="sm:col-span-2 lg:col-span-5 px-3.5 py-2.5 rounded-xl bg-cream-50 border border-cream-300 text-sm text-espresso-900">
                             </form>
                         </div>
 
-                        <!-- Mevcut Hizmetleri Düzenleme Listesi -->
                         <div>
                             <div class="flex items-center justify-between mb-3">
                                 <h3 class="font-serif text-2xl font-bold text-espresso-900">Mevcut Hizmet & Fiyat Listesi</h3>
                                 <span class="text-xs text-espresso-700">Yaptığınız değişiklikler ana sayfaya anında yansır.</span>
                             </div>
-                            <div id="admin-services-list" class="space-y-3">
-                                <!-- JS ile doldurulacak -->
-                            </div>
+                            <div id="admin-services-list" class="space-y-3"></div>
                         </div>
                     </div>
 
@@ -973,7 +1032,7 @@
                                 </div>
 
                                 <div class="flex items-center gap-3">
-                                    <button type="submit" class="px-6 py-3 rounded-xl bg-espresso-900 hover:bg-espresso-800 text-cream-50 font-semibold text-sm transition shadow">
+                                    <button type="submit" class="px-6 py-3 rounded-xl bg-espresso-900 hover:bg-espresso-800 text-cream-50 font-semibold text-sm transition shadow cursor-pointer">
                                         Ayarları Kaydet & Yayınla
                                     </button>
                                     <span id="promo-saved-badge" class="hidden text-xs font-semibold text-emerald-700 flex items-center gap-1">
@@ -993,548 +1052,452 @@
     <!-- UYGULAMA JAVASCRIPT KODLARI (LocalStorage & Dinamik Yönetim)          -->
     <!-- ===================================================================== -->
     <script>
-        // SABİTLER & VARSAYILAN VERİLER
-        const ADMIN_PIN = "1234";
-        const STORAGE_KEYS = {
-            SERVICES: "kuafor_semiha_services_v1",
-            APPOINTMENTS: "kuafor_semiha_appointments_v1",
-            PROMO: "kuafor_semiha_promo_v1"
-        };
+        (function() {
+            const ADMIN_PIN = "1234";
+            const STORAGE_KEYS = {
+                SERVICES: "kuafor_semiha_services_v2",
+                APPOINTMENTS: "kuafor_semiha_appointments_v2",
+                PROMO: "kuafor_semiha_promo_v2"
+            };
 
-        const CATEGORY_LABELS = {
-            kesim: "Saç Tasarım & Kesim",
-            renk: "Renklendirme & Balayage",
-            bakim: "Bakım & Keratin",
-            gelin: "Gelin & Özel Gün"
-        };
+            const CATEGORY_LABELS = {
+                kesim: "Saç Tasarım & Kesim",
+                renk: "Renklendirme & Balayage",
+                bakim: "Bakım & Keratin",
+                gelin: "Gelin & Özel Gün"
+            };
 
-        const defaultServices = [
-            { id: "srv-1", category: "kesim", name: "Anatomik Saç Kesimi & Fön", desc: "Yüz şekliniz ve kemik yapınıza özel tasarım kesim, yıkama ve profesyonel fön.", duration: "60 Dk", price: 850 },
-            { id: "srv-2", category: "kesim", name: "Özel Gün Maşa & Dalga Tasarımı", desc: "Davet ve özel geceler için hacimli Hollywood dalgaları veya modern topuz.", duration: "60 Dk", price: 950 },
-            { id: "srv-3", category: "renk", name: "Doğal Balayage & Sombre Tasarımı", desc: "Dip renginizle kusursuz bütünleşen, doğal güneş ışıltısı görünümü veren renklendirme.", duration: "210 Dk", price: 4500 },
-            { id: "srv-4", category: "renk", name: "Brushlight & Babylights Işıltı", desc: "Saç aralarına ince dokunuşlarla boyut ve parlaklık kazandıran modern geçiş tekniği.", duration: "180 Dk", price: 3900 },
-            { id: "srv-5", category: "renk", name: "Dip Boya & Parlaklık Cilası (Gloss)", desc: "Beyaz kapama veya dip eşitleme ile birlikte saç rengini canlandıran parlaklık cilası.", duration: "90 Dk", price: 1350 },
-            { id: "srv-6", category: "bakim", name: "Keratin & Olaplex Yoğun Onarım", desc: "İşlem görmüş ve yıpranmış saç bağlarını onaran derinlemesine bakım ritüeli.", duration: "75 Dk", price: 1400 },
-            { id: "srv-7", category: "bakim", name: "Brezilya Fönü (Kalıcı Düzleştirme)", desc: "Mersin'in nemli havasında bile elektriklenmeyi önleyen 4-6 ay kalıcı bakım.", duration: "150 Dk", price: 3200 },
-            { id: "srv-8", category: "gelin", name: "VIP Gelin Saçı & Porselen Makyaj", desc: "Ücretsiz ön prova, duvak montajı ve gece boyu kalıcı porselen makyaj paketi.", duration: "240 Dk", price: 8500 },
-            { id: "srv-9", category: "gelin", name: "Nişan & Kına Saç - Makyaj Tasarımı", desc: "Konseptinize uygun romantik topuz/örgü tasarımları ve profesyonel gece makyajı.", duration: "180 Dk", price: 5200 }
-        ];
+            const defaultServices = [
+                { id: "srv-1", category: "kesim", name: "Anatomik Saç Kesimi & Fön", desc: "Yüz şekliniz ve kemik yapınıza özel tasarım kesim, yıkama ve profesyonel fön.", duration: "60 Dk", price: 850 },
+                { id: "srv-2", category: "kesim", name: "Özel Gün Maşa & Dalga Tasarımı", desc: "Davet ve özel geceler için hacimli Hollywood dalgaları veya modern topuz.", duration: "60 Dk", price: 950 },
+                { id: "srv-3", category: "renk", name: "Doğal Balayage & Sombre Tasarımı", desc: "Dip renginizle kusursuz bütünleşen, doğal güneş ışıltısı görünümü veren renklendirme.", duration: "210 Dk", price: 4500 },
+                { id: "srv-4", category: "renk", name: "Brushlight & Babylights Işıltı", desc: "Saç aralarına ince dokunuşlarla boyut ve parlaklık kazandıran modern geçiş tekniği.", duration: "180 Dk", price: 3900 },
+                { id: "srv-5", category: "renk", name: "Dip Boya & Parlaklık Cilası (Gloss)", desc: "Beyaz kapama veya dip eşitleme ile birlikte saç rengini canlandıran parlaklık cilası.", duration: "90 Dk", price: 1350 },
+                { id: "srv-6", category: "bakim", name: "Keratin & Olaplex Yoğun Onarım", desc: "İşlem görmüş ve yıpranmış saç bağlarını onaran derinlemesine bakım ritüeli.", duration: "75 Dk", price: 1400 },
+                { id: "srv-7", category: "bakim", name: "Brezilya Fönü (Kalıcı Düzleştirme)", desc: "Mersin'in nemli havasında bile elektriklenmeyi önleyen 4-6 ay kalıcı bakım.", duration: "150 Dk", price: 3200 },
+                { id: "srv-8", category: "gelin", name: "VIP Gelin Saçı & Porselen Makyaj", desc: "Ücretsiz ön prova, duvak montajı ve gece boyu kalıcı porselen makyaj paketi.", duration: "240 Dk", price: 8500 },
+                { id: "srv-9", category: "gelin", name: "Nişan & Kına Saç - Makyaj Tasarımı", desc: "Konseptinize uygun romantik topuz/örgü tasarımları ve profesyonel gece makyajı.", duration: "180 Dk", price: 5200 }
+            ];
 
-        const defaultPromo = {
-            active: true,
-            text: "Yeni Sezon Balayage & Keratin Bakımlarında %15 Avantaj!"
-        };
+            const defaultPromo = {
+                active: true,
+                text: "Yeni Sezon Balayage & Keratin Bakımlarında %15 Avantaj!"
+            };
 
-        // Bugünün ve yarının tarihlerini dinamik oluştur
-        function getFormattedOffsetDate(daysOffset) {
-            const d = new Date();
-            d.setDate(d.getDate() + daysOffset);
-            const yyyy = d.getFullYear();
-            const mm = String(d.getMonth() + 1).padStart(2, '0');
-            const dd = String(d.getDate()).padStart(2, '0');
-            return `${yyyy}-${mm}-${dd}`;
-        }
-
-        const todayStr = getFormattedOffsetDate(0);
-        const tomorrowStr = getFormattedOffsetDate(1);
-
-        const defaultAppointments = [
-            {
-                id: "apt-101",
-                name: "Melis Özkan",
-                phone: "0532 411 22 33",
-                serviceName: "Doğal Balayage & Sombre Tasarımı",
-                price: 4500,
-                specialist: "Ece Demir",
-                date: todayStr,
-                time: "11:30",
-                status: "Onaylandı"
-            },
-            {
-                id: "apt-102",
-                name: "Selma Karadağ",
-                phone: "0544 890 12 45",
-                serviceName: "Anatomik Saç Kesimi & Fön",
-                price: 850,
-                specialist: "Semiha Yılmaz",
-                date: todayStr,
-                time: "14:30",
-                status: "Bekliyor"
-            },
-            {
-                id: "apt-103",
-                name: "Burcu Kılıç",
-                phone: "0505 774 99 10",
-                serviceName: "VIP Gelin Saçı & Porselen Makyaj",
-                price: 8500,
-                specialist: "Selin Kaya",
-                date: tomorrowStr,
-                time: "10:00",
-                status: "Onaylandı"
-            },
-            {
-                id: "apt-104",
-                name: "Zehra Aksoy",
-                phone: "0533 650 33 88",
-                serviceName: "Keratin & Olaplex Yoğun Onarım",
-                price: 1400,
-                specialist: "Zeynep Arslan",
-                date: tomorrowStr,
-                time: "16:00",
-                status: "Bekliyor"
+            function getFormattedOffsetDate(daysOffset) {
+                const d = new Date();
+                d.setDate(d.getDate() + daysOffset);
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                return `${yyyy}-${mm}-${dd}`;
             }
-        ];
 
-        // UYGULAMA DURUMU (STATE)
-        let services = [];
-        let appointments = [];
-        let promoSettings = {};
-        let currentServiceCategory = "kesim";
+            const todayStr = getFormattedOffsetDate(0);
+            const tomorrowStr = getFormattedOffsetDate(1);
 
-        // LOCALSTORAGE YÜKLEME & KAYDETME FONKSİYONLARI
-        function loadState() {
-            try {
-                const storedServices = localStorage.getItem(STORAGE_KEYS.SERVICES);
-                services = storedServices ? JSON.parse(storedServices) : [...defaultServices];
-                if (!storedServices) localStorage.setItem(STORAGE_KEYS.SERVICES, JSON.stringify(services));
+            const defaultAppointments = [
+                {
+                    id: "apt-101",
+                    name: "Melis Özkan",
+                    phone: "0532 411 22 33",
+                    serviceName: "Doğal Balayage & Sombre Tasarımı",
+                    price: 4500,
+                    specialist: "Ece Demir",
+                    date: todayStr,
+                    time: "11:30",
+                    status: "Onaylandı"
+                },
+                {
+                    id: "apt-102",
+                    name: "Selma Karadağ",
+                    phone: "0544 890 12 45",
+                    serviceName: "Anatomik Saç Kesimi & Fön",
+                    price: 850,
+                    specialist: "Semiha Yılmaz",
+                    date: todayStr,
+                    time: "14:30",
+                    status: "Bekliyor"
+                },
+                {
+                    id: "apt-103",
+                    name: "Burcu Kılıç",
+                    phone: "0505 774 99 10",
+                    serviceName: "VIP Gelin Saçı & Porselen Makyaj",
+                    price: 8500,
+                    specialist: "Selin Kaya",
+                    date: tomorrowStr,
+                    time: "10:00",
+                    status: "Onaylandı"
+                },
+                {
+                    id: "apt-104",
+                    name: "Zehra Aksoy",
+                    phone: "0533 650 33 88",
+                    serviceName: "Keratin & Olaplex Yoğun Onarım",
+                    price: 1400,
+                    specialist: "Zeynep Arslan",
+                    date: tomorrowStr,
+                    time: "16:00",
+                    status: "Bekliyor"
+                }
+            ];
 
-                const storedAppointments = localStorage.getItem(STORAGE_KEYS.APPOINTMENTS);
-                appointments = storedAppointments ? JSON.parse(storedAppointments) : [...defaultAppointments];
-                if (!storedAppointments) localStorage.setItem(STORAGE_KEYS.APPOINTMENTS, JSON.stringify(appointments));
+            let services = [];
+            let appointments = [];
+            let promoSettings = {};
+            let currentServiceCategory = "kesim";
 
-                const storedPromo = localStorage.getItem(STORAGE_KEYS.PROMO);
-                promoSettings = storedPromo ? JSON.parse(storedPromo) : { ...defaultPromo };
-                if (!storedPromo) localStorage.setItem(STORAGE_KEYS.PROMO, JSON.stringify(promoSettings));
-            } catch (e) {
+            function loadState() {
+                try {
+                    const storedServices = localStorage.getItem(STORAGE_KEYS.SERVICES);
+                    services = storedServices ? JSON.parse(storedServices) : [...defaultServices];
+                    if (!storedServices) localStorage.setItem(STORAGE_KEYS.SERVICES, JSON.stringify(services));
+
+                    const storedAppointments = localStorage.getItem(STORAGE_KEYS.APPOINTMENTS);
+                    appointments = storedAppointments ? JSON.parse(storedAppointments) : [...defaultAppointments];
+                    if (!storedAppointments) localStorage.setItem(STORAGE_KEYS.APPOINTMENTS, JSON.stringify(appointments));
+
+                    const storedPromo = localStorage.getItem(STORAGE_KEYS.PROMO);
+                    promoSettings = storedPromo ? JSON.parse(storedPromo) : { ...defaultPromo };
+                    if (!storedPromo) localStorage.setItem(STORAGE_KEYS.PROMO, JSON.stringify(promoSettings));
+                } catch (e) {
+                    services = [...defaultServices];
+                    appointments = [...defaultAppointments];
+                    promoSettings = { ...defaultPromo };
+                }
+            }
+
+            function saveServices() {
+                try { localStorage.setItem(STORAGE_KEYS.SERVICES, JSON.stringify(services)); } catch (e) {}
+                renderPublicServices(currentServiceCategory);
+                const catEl = document.getElementById('booking-category');
+                if (catEl) populateBookingServices(catEl.value);
+                renderAdminServices();
+            }
+
+            function saveAppointments() {
+                try { localStorage.setItem(STORAGE_KEYS.APPOINTMENTS, JSON.stringify(appointments)); } catch (e) {}
+                renderTimeSlots();
+                renderAdminStats();
+                window.renderAdminAppointments();
+            }
+
+            function savePromo() {
+                try { localStorage.setItem(STORAGE_KEYS.PROMO, JSON.stringify(promoSettings)); } catch (e) {}
+                applyPromoBanner();
+            }
+
+            function formatTL(amount) {
+                return Number(amount).toLocaleString('tr-TR') + " ₺";
+            }
+
+            function applyPromoBanner() {
+                const banner = document.getElementById('promo-banner');
+                const bannerText = document.getElementById('promo-banner-text');
+                if (!banner || !bannerText) return;
+                if (promoSettings.active && promoSettings.text.trim() !== "") {
+                    bannerText.textContent = promoSettings.text;
+                    banner.classList.remove('hidden');
+                } else {
+                    banner.classList.add('hidden');
+                }
+            }
+
+            function renderPublicServices(categoryKey) {
+                currentServiceCategory = categoryKey;
+                const grid = document.getElementById('services-grid');
+                if (!grid) return;
+                const filtered = services.filter(s => s.category === categoryKey);
+
+                if (filtered.length === 0) {
+                    grid.innerHTML = `<div class="col-span-2 text-center py-10 text-espresso-700">Bu kategoride henüz hizmet bulunmamaktadır.</div>`;
+                    return;
+                }
+
+                grid.innerHTML = filtered.map(item => `
+                    <div class="bg-cream-100/80 hover:bg-cream-100 p-6 sm:p-7 rounded-2xl border border-cream-200 hover:border-gold-500/60 transition flex flex-col justify-between gap-4 shadow-sm">
+                        <div>
+                            <div class="flex items-start justify-between gap-4">
+                                <h3 class="font-serif text-xl sm:text-2xl font-bold text-espresso-900">${item.name}</h3>
+                                <span class="shrink-0 font-serif text-xl sm:text-2xl font-bold text-gold-600">${formatTL(item.price)}</span>
+                            </div>
+                            <p class="text-espresso-700 text-sm mt-2 leading-relaxed">${item.desc}</p>
+                        </div>
+                        <div class="pt-4 border-t border-cream-200/80 flex items-center justify-between">
+                            <span class="text-xs font-medium text-espresso-700 flex items-center gap-1.5">
+                                <i class="fa-regular fa-clock text-gold-600"></i> Süre: ${item.duration}
+                            </span>
+                            <button type="button" onclick="window.selectServiceAndScroll('${item.category}', '${item.id}')" class="px-4 py-2 rounded-full bg-espresso-900 hover:bg-gold-500 text-cream-50 hover:text-espresso-950 text-xs font-semibold transition cursor-pointer">
+                                Randevu Seç
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // ONLINE RANDEVU SİSTEMİ
+            const bookingCategorySelect = document.getElementById('booking-category');
+            const bookingServiceSelect = document.getElementById('booking-service');
+            const bookingSpecialistSelect = document.getElementById('booking-specialist');
+            const bookingDateInput = document.getElementById('booking-date');
+            const timeSlotsContainer = document.getElementById('time-slots-container');
+            const bookingTimeInput = document.getElementById('booking-time');
+            const bookingForm = document.getElementById('booking-form');
+            const bookingConfirmation = document.getElementById('booking-confirmation');
+            const bookingError = document.getElementById('booking-error');
+            const bookingErrorText = document.getElementById('booking-error-text');
+
+            if (bookingDateInput) {
+                bookingDateInput.min = todayStr;
+                bookingDateInput.value = todayStr;
+            }
+
+            function populateBookingServices(categoryKey, selectedServiceId = null) {
+                if (!bookingServiceSelect) return;
+                const list = services.filter(s => s.category === categoryKey);
+                bookingServiceSelect.innerHTML = list.map(item => 
+                    `<option value="${item.id}">${item.name} — ${formatTL(item.price)}</option>`
+                ).join('');
+
+                if (selectedServiceId) {
+                    bookingServiceSelect.value = selectedServiceId;
+                }
+            }
+
+            const ALL_TIME_SLOTS = ['10:00', '11:30', '13:00', '14:30', '16:00', '17:30'];
+
+            function isSlotBooked(dateVal, timeVal) {
+                return appointments.some(apt => 
+                    apt.date === dateVal && 
+                    apt.time === timeVal && 
+                    apt.status !== "İptal Edildi"
+                );
+            }
+
+            function renderTimeSlots() {
+                if (!bookingDateInput || !timeSlotsContainer) return;
+                const selectedDate = bookingDateInput.value;
+                timeSlotsContainer.innerHTML = ALL_TIME_SLOTS.map(time => {
+                    const booked = isSlotBooked(selectedDate, time);
+                    if (booked) {
+                        return `
+                            <button type="button" disabled title="Bu saat doludur" class="py-2.5 px-3 rounded-xl border border-red-200 bg-red-50 text-red-400 text-xs sm:text-sm font-medium cursor-not-allowed line-through">
+                                ${time} (Dolu)
+                            </button>
+                        `;
+                    }
+                    const isSelected = bookingTimeInput.value === time;
+                    return `
+                        <button type="button" data-time="${time}" class="time-slot-btn py-2.5 px-3 rounded-xl border ${isSelected ? 'bg-espresso-900 text-gold-400 border-espresso-900 font-bold' : 'bg-cream-100 text-espresso-900 border-cream-300 hover:border-gold-500'} text-sm font-medium transition cursor-pointer">
+                            ${time}
+                        </button>
+                    `;
+                }).join('');
+
+                document.querySelectorAll('.time-slot-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        bookingTimeInput.value = btn.dataset.time;
+                        bookingError.classList.add('hidden');
+                        renderTimeSlots();
+                    });
+                });
+            }
+
+            window.selectServiceAndScroll = function(categoryKey, serviceId = null) {
+                bookingCategorySelect.value = categoryKey;
+                populateBookingServices(categoryKey, serviceId);
+                bookingConfirmation.classList.add('hidden');
+                bookingForm.classList.remove('hidden');
+                document.getElementById('randevu').scrollIntoView({ behavior: 'smooth' });
+            };
+
+            window.selectSpecialistAndScroll = function(specialistName) {
+                bookingSpecialistSelect.value = specialistName;
+                bookingConfirmation.classList.add('hidden');
+                bookingForm.classList.remove('hidden');
+                document.getElementById('randevu').scrollIntoView({ behavior: 'smooth' });
+            };
+
+            // =================================================================
+            // YÖNETİCİ PANELİ GİRİŞ & DASHBOARD FONKSİYONLARI
+            // =================================================================
+            window.checkAdminLogin = function(e) {
+                if (e) e.preventDefault();
+                const pinInput = document.getElementById('admin-pin-input');
+                const authError = document.getElementById('admin-auth-error');
+                if (!pinInput) return;
+
+                if (pinInput.value.trim() === ADMIN_PIN) {
+                    window.closeAdminModal();
+                    window.openAdminDashboard();
+                } else {
+                    if (authError) authError.classList.remove('hidden');
+                    pinInput.value = "";
+                    pinInput.focus();
+                }
+            };
+
+            window.openAdminDashboard = function() {
+                loadState();
+                renderAdminStats();
+                window.renderAdminAppointments();
+                renderAdminServices();
+                const promoCheck = document.getElementById('promo-active-checkbox');
+                const promoInput = document.getElementById('promo-text-input');
+                if (promoCheck) promoCheck.checked = promoSettings.active;
+                if (promoInput) promoInput.value = promoSettings.text;
+
+                const dashboardModal = document.getElementById('admin-dashboard-modal');
+                if (dashboardModal) {
+                    dashboardModal.classList.remove('hidden');
+                    dashboardModal.style.display = 'block';
+                }
+                document.body.classList.add('overflow-hidden');
+            };
+
+            function renderAdminStats() {
+                const total = appointments.length;
+                const pending = appointments.filter(a => a.status === "Bekliyor").length;
+                const confirmed = appointments.filter(a => a.status === "Onaylandı").length;
+                const revenue = appointments
+                    .filter(a => a.status !== "İptal Edildi")
+                    .reduce((sum, item) => sum + Number(item.price || 0), 0);
+
+                document.getElementById('stat-total').textContent = total;
+                document.getElementById('stat-pending').textContent = pending;
+                document.getElementById('stat-confirmed').textContent = confirmed;
+                document.getElementById('stat-revenue').textContent = formatTL(revenue);
+            }
+
+            window.renderAdminAppointments = function() {
+                const tbody = document.getElementById('admin-appointments-tbody');
+                const filterEl = document.getElementById('admin-status-filter');
+                if (!tbody) return;
+                const filterVal = filterEl ? filterEl.value : "ALL";
+                const filtered = filterVal === "ALL" ? appointments : appointments.filter(a => a.status === filterVal);
+
+                if (filtered.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-espresso-700">Kayıtlı randevu bulunamadı.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = filtered.map(apt => {
+                    const [y, m, d] = apt.date.split('-');
+                    const formattedDate = `${d}.${m}.${y}`;
+
+                    let statusBadgeClass = "bg-amber-100 text-amber-800 border-amber-300";
+                    if (apt.status === "Onaylandı") statusBadgeClass = "bg-emerald-100 text-emerald-800 border-emerald-300";
+                    if (apt.status === "İptal Edildi") statusBadgeClass = "bg-red-100 text-red-800 border-red-300";
+
+                    const cleanPhone = apt.phone.replace(/\D/g, '').replace(/^0/, '90');
+                    const waConfirmMsg = `Merhaba Sayın ${encodeURIComponent(apt.name)}, Kuaför Semiha'dan ${encodeURIComponent(formattedDate)} saat ${encodeURIComponent(apt.time)} tarihli "${encodeURIComponent(apt.serviceName)}" randevunuz ONAYLANMIŞTIR. Sizi salonumuzda ağırlamaktan mutluluk duyarız.`;
+
+                    return `
+                        <tr class="hover:bg-cream-200/40 transition">
+                            <td class="py-3.5 px-4">
+                                <div class="font-bold text-espresso-900">${apt.name}</div>
+                                <div class="text-xs text-espresso-700">${apt.phone}</div>
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <div class="font-medium text-espresso-900">${apt.serviceName}</div>
+                                <div class="text-xs font-bold text-gold-600">${formatTL(apt.price)}</div>
+                            </td>
+                            <td class="py-3.5 px-4 text-xs font-medium text-espresso-800">${apt.specialist}</td>
+                            <td class="py-3.5 px-4">
+                                <div class="font-semibold text-espresso-900 text-xs">${formattedDate}</div>
+                                <div class="text-xs text-gold-600 font-bold">Saat ${apt.time}</div>
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <select onchange="window.updateAppointmentStatus('${apt.id}', this.value)" class="px-2.5 py-1.5 rounded-lg border text-xs font-bold cursor-pointer focus:outline-none ${statusBadgeClass}">
+                                    <option value="Bekliyor" ${apt.status === "Bekliyor" ? "selected" : ""}>Bekliyor</option>
+                                    <option value="Onaylandı" ${apt.status === "Onaylandı" ? "selected" : ""}>Onaylandı</option>
+                                    <option value="İptal Edildi" ${apt.status === "İptal Edildi" ? "selected" : ""}>İptal Edildi</option>
+                                </select>
+                            </td>
+                            <td class="py-3.5 px-4 text-right">
+                                <div class="inline-flex items-center gap-1.5">
+                                    <a href="https://wa.me/${cleanPhone}?text=${waConfirmMsg}" target="_blank" rel="noopener" title="Müşteriye WhatsApp Onay Mesajı Gönder" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium transition flex items-center gap-1">
+                                        <i class="fa-brands fa-whatsapp"></i>
+                                        <span class="hidden xl:inline">WhatsApp</span>
+                                    </a>
+                                    <button type="button" onclick="window.deleteAppointment('${apt.id}')" title="Randevuyu Sil" class="p-2 rounded-lg bg-red-100 hover:bg-red-600 text-red-700 hover:text-white transition text-xs cursor-pointer">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            };
+
+            window.updateAppointmentStatus = function(id, newStatus) {
+                const idx = appointments.findIndex(a => a.id === id);
+                if (idx !== -1) {
+                    appointments[idx].status = newStatus;
+                    saveAppointments();
+                }
+            };
+
+            window.deleteAppointment = function(id) {
+                appointments = appointments.filter(a => a.id !== id);
+                saveAppointments();
+            };
+
+            function renderAdminServices() {
+                const container = document.getElementById('admin-services-list');
+                if (!container) return;
+                container.innerHTML = services.map(srv => `
+                    <div class="bg-cream-100 p-4 rounded-2xl border border-cream-200 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                        <div class="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center">
+                            <span class="sm:col-span-3 text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-espresso-900 text-gold-400 text-center">
+                                ${CATEGORY_LABELS[srv.category] || srv.category}
+                            </span>
+                            <input type="text" value="${srv.name}" onchange="window.updateServiceField('${srv.id}', 'name', this.value)" class="sm:col-span-5 px-3 py-2 rounded-xl bg-cream-50 border border-cream-300 text-sm font-semibold text-espresso-900">
+                            <div class="sm:col-span-2 flex items-center gap-1">
+                                <input type="number" value="${srv.price}" min="0" onchange="window.updateServiceField('${srv.id}', 'price', Number(this.value))" class="w-full px-3 py-2 rounded-xl bg-cream-50 border border-cream-300 text-sm font-bold text-gold-600">
+                                <span class="text-xs font-bold text-espresso-700">₺</span>
+                            </div>
+                            <input type="text" value="${srv.duration}" onchange="window.updateServiceField('${srv.id}', 'duration', this.value)" class="sm:col-span-2 px-3 py-2 rounded-xl bg-cream-50 border border-cream-300 text-xs text-espresso-700">
+                        </div>
+                        <div class="flex items-center justify-end gap-2">
+                            <button type="button" onclick="window.deleteService('${srv.id}')" class="px-3 py-2 rounded-xl bg-red-100 hover:bg-red-600 text-red-700 hover:text-white text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
+                                <i class="fa-solid fa-trash"></i> Sil
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            window.updateServiceField = function(id, field, value) {
+                const idx = services.findIndex(s => s.id === id);
+                if (idx !== -1) {
+                    services[idx][field] = value;
+                    saveServices();
+                }
+            };
+
+            window.deleteService = function(id) {
+                services = services.filter(s => s.id !== id);
+                saveServices();
+            };
+
+            window.resetSystemToDefaults = function() {
                 services = [...defaultServices];
                 appointments = [...defaultAppointments];
                 promoSettings = { ...defaultPromo };
-            }
-        }
-
-        function saveServices() {
-            localStorage.setItem(STORAGE_KEYS.SERVICES, JSON.stringify(services));
-            renderPublicServices(currentServiceCategory);
-            populateBookingServices(document.getElementById('booking-category').value);
-            renderAdminServices();
-        }
-
-        function saveAppointments() {
-            localStorage.setItem(STORAGE_KEYS.APPOINTMENTS, JSON.stringify(appointments));
-            renderTimeSlots();
-            renderAdminStats();
-            renderAdminAppointments();
-        }
-
-        function savePromo() {
-            localStorage.setItem(STORAGE_KEYS.PROMO, JSON.stringify(promoSettings));
-            applyPromoBanner();
-        }
-
-        // PARA FORMATLAYICI
-        function formatTL(amount) {
-            return Number(amount).toLocaleString('tr-TR') + " ₺";
-        }
-
-        // 1. DUYURU BANDI GÜNCELLEME
-        function applyPromoBanner() {
-            const banner = document.getElementById('promo-banner');
-            const bannerText = document.getElementById('promo-banner-text');
-            if (promoSettings.active && promoSettings.text.trim() !== "") {
-                bannerText.textContent = promoSettings.text;
-                banner.classList.remove('hidden');
-            } else {
-                banner.classList.add('hidden');
-            }
-        }
-
-        // 2. ANA SAYFA HİZMET & FİYAT KATALOĞU RENDER
-        function renderPublicServices(categoryKey) {
-            currentServiceCategory = categoryKey;
-            const grid = document.getElementById('services-grid');
-            const filtered = services.filter(s => s.category === categoryKey);
-
-            if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-2 text-center py-10 text-espresso-700">Bu kategoride henüz hizmet bulunmamaktadır.</div>`;
-                return;
-            }
-
-            grid.innerHTML = filtered.map(item => `
-                <div class="bg-cream-100/80 hover:bg-cream-100 p-6 sm:p-7 rounded-2xl border border-cream-200 hover:border-gold-500/60 transition flex flex-col justify-between gap-4 shadow-sm">
-                    <div>
-                        <div class="flex items-start justify-between gap-4">
-                            <h3 class="font-serif text-xl sm:text-2xl font-bold text-espresso-900">${item.name}</h3>
-                            <span class="shrink-0 font-serif text-xl sm:text-2xl font-bold text-gold-600">${formatTL(item.price)}</span>
-                        </div>
-                        <p class="text-espresso-700 text-sm mt-2 leading-relaxed">${item.desc}</p>
-                    </div>
-                    <div class="pt-4 border-t border-cream-200/80 flex items-center justify-between">
-                        <span class="text-xs font-medium text-espresso-700 flex items-center gap-1.5">
-                            <i class="fa-regular fa-clock text-gold-600"></i> Süre: ${item.duration}
-                        </span>
-                        <button type="button" onclick="selectServiceAndScroll('${item.category}', '${item.id}')" class="px-4 py-2 rounded-full bg-espresso-900 hover:bg-gold-500 text-cream-50 hover:text-espresso-950 text-xs font-semibold transition">
-                            Randevu Seç
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Kategori Sekme Tıklamaları
-        document.querySelectorAll('.service-tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.service-tab-btn').forEach(b => {
-                    b.classList.remove('bg-espresso-900', 'text-cream-50', 'shadow-md');
-                    b.classList.add('bg-cream-200/70', 'text-espresso-800');
-                });
-                btn.classList.remove('bg-cream-200/70', 'text-espresso-800');
-                btn.classList.add('bg-espresso-900', 'text-cream-50', 'shadow-md');
-                renderPublicServices(btn.dataset.category);
-            });
-        });
-
-        // 3. ONLINE RANDEVU SİSTEMİ & DOLULUK KONTROLÜ
-        const bookingCategorySelect = document.getElementById('booking-category');
-        const bookingServiceSelect = document.getElementById('booking-service');
-        const bookingSpecialistSelect = document.getElementById('booking-specialist');
-        const bookingDateInput = document.getElementById('booking-date');
-        const timeSlotsContainer = document.getElementById('time-slots-container');
-        const bookingTimeInput = document.getElementById('booking-time');
-        const bookingForm = document.getElementById('booking-form');
-        const bookingConfirmation = document.getElementById('booking-confirmation');
-        const bookingError = document.getElementById('booking-error');
-        const bookingErrorText = document.getElementById('booking-error-text');
-
-        bookingDateInput.min = todayStr;
-        bookingDateInput.value = todayStr;
-
-        function populateBookingServices(categoryKey, selectedServiceId = null) {
-            const list = services.filter(s => s.category === categoryKey);
-            bookingServiceSelect.innerHTML = list.map(item => 
-                `<option value="${item.id}">${item.name} — ${formatTL(item.price)}</option>`
-            ).join('');
-
-            if (selectedServiceId) {
-                bookingServiceSelect.value = selectedServiceId;
-            }
-        }
-
-        bookingCategorySelect.addEventListener('change', (e) => {
-            populateBookingServices(e.target.value);
-        });
-
-        bookingDateInput.addEventListener('change', () => {
-            bookingTimeInput.value = "";
-            renderTimeSlots();
-        });
-
-        // Saat Dilimlerini Render Et (İptal edilmemiş mevcut randevular dolu görünür)
-        const ALL_TIME_SLOTS = ['10:00', '11:30', '13:00', '14:30', '16:00', '17:30'];
-
-        function isSlotBooked(dateVal, timeVal) {
-            return appointments.some(apt => 
-                apt.date === dateVal && 
-                apt.time === timeVal && 
-                apt.status !== "İptal Edildi"
-            );
-        }
-
-        function renderTimeSlots() {
-            const selectedDate = bookingDateInput.value;
-            timeSlotsContainer.innerHTML = ALL_TIME_SLOTS.map(time => {
-                const booked = isSlotBooked(selectedDate, time);
-                if (booked) {
-                    return `
-                        <button type="button" disabled title="Bu saat doludur" class="py-2.5 px-3 rounded-xl border border-red-200 bg-red-50 text-red-400 text-xs sm:text-sm font-medium cursor-not-allowed line-through">
-                            ${time} (Dolu)
-                        </button>
-                    `;
-                }
-                const isSelected = bookingTimeInput.value === time;
-                return `
-                    <button type="button" data-time="${time}" class="time-slot-btn py-2.5 px-3 rounded-xl border ${isSelected ? 'bg-espresso-900 text-gold-400 border-espresso-900 font-bold' : 'bg-cream-100 text-espresso-900 border-cream-300 hover:border-gold-500'} text-sm font-medium transition">
-                        ${time}
-                    </button>
-                `;
-            }).join('');
-
-            document.querySelectorAll('.time-slot-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    bookingTimeInput.value = btn.dataset.time;
-                    bookingError.classList.add('hidden');
-                    renderTimeSlots();
-                });
-            });
-        }
-
-        window.selectServiceAndScroll = function(categoryKey, serviceId = null) {
-            bookingCategorySelect.value = categoryKey;
-            populateBookingServices(categoryKey, serviceId);
-            bookingConfirmation.classList.add('hidden');
-            bookingForm.classList.remove('hidden');
-            document.getElementById('randevu').scrollIntoView({ behavior: 'smooth' });
-        };
-
-        window.selectSpecialistAndScroll = function(specialistName) {
-            bookingSpecialistSelect.value = specialistName;
-            bookingConfirmation.classList.add('hidden');
-            bookingForm.classList.remove('hidden');
-            document.getElementById('randevu').scrollIntoView({ behavior: 'smooth' });
-        };
-
-        bookingForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const dateVal = bookingDateInput.value;
-            const timeVal = bookingTimeInput.value;
-
-            if (!timeVal) {
-                bookingErrorText.textContent = "Lütfen randevu için uygun bir saat dilimi seçiniz.";
-                bookingError.classList.remove('hidden');
-                return;
-            }
-
-            if (isSlotBooked(dateVal, timeVal)) {
-                bookingErrorText.textContent = "Seçtiğiniz tarih ve saat az önce doldu. Lütfen başka bir saat seçiniz.";
-                bookingError.classList.remove('hidden');
-                bookingTimeInput.value = "";
-                renderTimeSlots();
-                return;
-            }
-
-            const selectedServiceObj = services.find(s => s.id === bookingServiceSelect.value) || services[0];
-            const name = document.getElementById('booking-name').value.trim();
-            const phone = document.getElementById('booking-phone').value.trim();
-            const specialist = bookingSpecialistSelect.value;
-
-            const newAppointment = {
-                id: "apt-" + Date.now(),
-                name: name,
-                phone: phone,
-                serviceName: selectedServiceObj ? selectedServiceObj.name : "Genel Bakım",
-                price: selectedServiceObj ? Number(selectedServiceObj.price) : 0,
-                specialist: specialist,
-                date: dateVal,
-                time: timeVal,
-                status: "Bekliyor"
+                saveServices();
+                saveAppointments();
+                savePromo();
+                document.getElementById('promo-active-checkbox').checked = promoSettings.active;
+                document.getElementById('promo-text-input').value = promoSettings.text;
             };
 
-            appointments.unshift(newAppointment);
-            saveAppointments();
+            function initBeforeAfterSliders() {
+                document.querySelectorAll('[data-ba-slider]').forEach(slider => {
+                    const afterWrapper = slider.querySelector('.ba-after-wrapper');
+                    const beforeImg = slider.querySelector('.ba-before-img');
+                    const handle = slider.querySelector('.ba-handle');
+                    let isDragging = false;
 
-            const [y, m, d] = dateVal.split('-');
-            const formattedDate = `${d}.${m}.${y} - Saat ${timeVal}`;
-
-            document.getElementById('conf-name').textContent = name;
-            document.getElementById('conf-service').textContent = `${newAppointment.serviceName} (${formatTL(newAppointment.price)})`;
-            document.getElementById('conf-specialist').textContent = specialist;
-            document.getElementById('conf-datetime').textContent = formattedDate;
-            document.getElementById('conf-phone').textContent = phone;
-
-            const waText = `Merhaba Kuaför Semiha, web sitenizden randevu oluşturdum:%0A%0A• Ad Soyad: ${encodeURIComponent(name)}%0A• İşlem: ${encodeURIComponent(newAppointment.serviceName)}%0A• Uzman: ${encodeURIComponent(specialist)}%0A• Tarih/Saat: ${encodeURIComponent(formattedDate)}`;
-            document.getElementById('conf-whatsapp-btn').href = `https://wa.me/905320000000?text=${waText}`;
-
-            bookingForm.classList.add('hidden');
-            bookingConfirmation.classList.remove('hidden');
-        });
-
-        document.getElementById('new-booking-btn').addEventListener('click', () => {
-            bookingForm.reset();
-            bookingDateInput.value = todayStr;
-            bookingTimeInput.value = "";
-            populateBookingServices('kesim');
-            renderTimeSlots();
-            bookingConfirmation.classList.add('hidden');
-            bookingForm.classList.remove('hidden');
-        });
-
-        // =====================================================================
-        // 4. YÖNETİCİ PANELİ GİRİŞ & YÖNETİM İŞLEMLERİ (Şifre: 1234)
-        // =====================================================================
-        const authModal = document.getElementById('admin-auth-modal');
-        const authForm = document.getElementById('admin-auth-form');
-        const pinInput = document.getElementById('admin-pin-input');
-        const authError = document.getElementById('admin-auth-error');
-        const dashboardModal = document.getElementById('admin-dashboard-modal');
-
-        window.openAdminAuth = function() {
-            document.getElementById('mobile-menu').classList.add('hidden');
-            authError.classList.add('hidden');
-            pinInput.value = "";
-            authModal.classList.remove('hidden');
-            setTimeout(() => pinInput.focus(), 100);
-        };
-
-        window.closeAdminAuth = function() {
-            authModal.classList.add('hidden');
-        };
-
-        authForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (pinInput.value.trim() === ADMIN_PIN) {
-                closeAdminAuth();
-                openAdminDashboard();
-            } else {
-                authError.classList.remove('hidden');
-                pinInput.value = "";
-                pinInput.focus();
-            }
-        });
-
-        window.openAdminDashboard = function() {
-            renderAdminStats();
-            renderAdminAppointments();
-            renderAdminServices();
-            document.getElementById('promo-active-checkbox').checked = promoSettings.active;
-            document.getElementById('promo-text-input').value = promoSettings.text;
-            dashboardModal.classList.remove('hidden');
-            document.body.classList.add('overflow-hidden');
-        };
-
-        window.closeAdminDashboard = function() {
-            dashboardModal.classList.add('hidden');
-            document.body.classList.remove('overflow-hidden');
-        };
-
-        // Yönetici Sekmeleri Geçişi
-        document.querySelectorAll('.admin-tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.admin-tab-btn').forEach(b => {
-                    b.classList.remove('bg-espresso-900', 'text-cream-50');
-                    b.classList.add('bg-cream-200/70', 'text-espresso-800');
-                });
-                btn.classList.remove('bg-cream-200/70', 'text-espresso-800');
-                btn.classList.add('bg-espresso-900', 'text-cream-50');
-
-                document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.add('hidden'));
-                document.getElementById(`admin-tab-${btn.dataset.adminTab}`).classList.remove('hidden');
-            });
-        });
-
-        // A) İstatistik Kartlarını Güncelle
-        function renderAdminStats() {
-            const total = appointments.length;
-            const pending = appointments.filter(a => a.status === "Bekliyor").length;
-            const confirmed = appointments.filter(a => a.status === "Onaylandı").length;
-            const revenue = appointments
-                .filter(a => a.status !== "İptal Edildi")
-                .reduce((sum, item) => sum + Number(item.price || 0), 0);
-
-            document.getElementById('stat-total').textContent = total;
-            document.getElementById('stat-pending').textContent = pending;
-            document.getElementById('stat-confirmed').textContent = confirmed;
-            document.getElementById('stat-revenue').textContent = formatTL(revenue);
-        }
-
-        // B) Randevu Tablosunu Render Et
-        window.renderAdminAppointments = function() {
-            const tbody = document.getElementById('admin-appointments-tbody');
-            const filterVal = document.getElementById('admin-status-filter').value;
-            const filtered = filterVal === "ALL" ? appointments : appointments.filter(a => a.status === filterVal);
-
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-espresso-700">Kayıtlı randevu bulunamadı.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = filtered.map(apt => {
-                const [y, m, d] = apt.date.split('-');
-                const formattedDate = `${d}.${m}.${y}`;
-
-                let statusBadgeClass = "bg-amber-100 text-amber-800 border-amber-300";
-                if (apt.status === "Onaylandı") statusBadgeClass = "bg-emerald-100 text-emerald-800 border-emerald-300";
-                if (apt.status === "İptal Edildi") statusBadgeClass = "bg-red-100 text-red-800 border-red-300";
-
-                // Telefon numarasını WhatsApp linkine uygun temizle
-                const cleanPhone = apt.phone.replace(/\D/g, '').replace(/^0/, '90');
-                const waConfirmMsg = `Merhaba Sayın ${encodeURIComponent(apt.name)}, Kuaför Semiha'dan ${encodeURIComponent(formattedDate)} saat ${encodeURIComponent(apt.time)} tarihli "${encodeURIComponent(apt.serviceName)}" randevunuz ONAYLANMIŞTIR. Sizi salonumuzda ağırlamaktan mutluluk duyarız.`;
-
-                return `
-                    <tr class="hover:bg-cream-200/40 transition">
-                        <td class="py-3.5 px-4">
-                            <div class="font-bold text-espresso-900">${apt.name}</div>
-                            <div class="text-xs text-espresso-700">${apt.phone}</div>
-                        </td>
-                        <td class="py-3.5 px-4">
-                            <div class="font-medium text-espresso-900">${apt.serviceName}</div>
-                            <div class="text-xs font-bold text-gold-600">${formatTL(apt.price)}</div>
-                        </td>
-                        <td class="py-3.5 px-4 text-xs font-medium text-espresso-800">${apt.specialist}</td>
-                        <td class="py-3.5 px-4">
-                            <div class="font-semibold text-espresso-900 text-xs">${formattedDate}</div>
-                            <div class="text-xs text-gold-600 font-bold">Saat ${apt.time}</div>
-                        </td>
-                        <td class="py-3.5 px-4">
-                            <select onchange="updateAppointmentStatus('${apt.id}', this.value)" class="px-2.5 py-1.5 rounded-lg border text-xs font-bold cursor-pointer focus:outline-none ${statusBadgeClass}">
-                                <option value="Bekliyor" ${apt.status === "Bekliyor" ? "selected" : ""}>Bekliyor</option>
-                                <option value="Onaylandı" ${apt.status === "Onaylandı" ? "selected" : ""}>Onaylandı</option>
-                                <option value="İptal Edildi" ${apt.status === "İptal Edildi" ? "selected" : ""}>İptal Edildi</option>
-                            </select>
-                        </td>
-                        <td class="py-3.5 px-4 text-right">
-                            <div class="inline-flex items-center gap-1.5">
-                                <a href="https://wa.me/${cleanPhone}?text=${waConfirmMsg}" target="_blank" rel="noopener" title="Müşteriye WhatsApp Onay Mesajı Gönder" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium transition flex items-center gap-1">
-                                    <i class="fa-brands fa-whatsapp"></i>
-                                    <span class="hidden xl:inline">Onay At</span>
-                                </a>
-                                <button type="button" onclick="deleteAppointment('${apt.id}')" title="Randevuyu Sil" class="p-2 rounded-lg bg-red-100 hover:bg-red-600 text-red-700 hover:text-white transition text-xs">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        };
-
-        window.updateAppointmentStatus = function(id, newStatus) {
-            const idx = appointments.findIndex(a => a.id === id);
-            if (idx !== -1) {
-                appointments[idx].status = newStatus;
-                saveAppointments();
-            }
-        };
-
-        window.deleteAppointment = function(id) {
-            appointments = appointments.filter(a => a.id !== id);
-            saveAppointments();
-        };
-
-        // C) Hizmet & Fiyat Yönetimi Render ve Düzenleme
-        function renderAdminServices() {
-            const container = document.getElementById('admin-services-list');
-            container.innerHTML = services.map(srv => `
-                <div class="bg-cream-100 p-4 rounded-2xl border border-cream-200 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-                    <div class="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center">
-                        <span class="sm:col-span-3 text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-espresso-900 text-gold-400 text-center">
-                            ${CATEGORY_LABELS[srv.category] || srv.category}
-                        </span>
-                        <input type="text" value="${srv.name}" onchange="updateServiceField('${srv.id}', 'name', this.value)" class="sm:col-span-5 px-3 py-2 rounded-xl bg-cream-50 border border-cream-300 text-sm font-semibold text-espresso-900">
-                        <div class="sm:col-span-2 flex items-center gap-1">
-                            <input type="number" value="${srv.price}" min="0" onchange="updateServiceField('${srv.id}', 'price', Number(this.value))" class="w-full px-3 py-2 rounded-xl bg-cream-50 border border-cream-300 text-sm font-bold text-gold-600">
-                            <span class="text-xs font-bold text-espresso-700">₺</span>
-                        </div>
-                        <input type="text" value="${srv.duration}" onchange="updateServiceField('${srv.id}', 'duration', this.value)" class="sm:col-span-2 px-3 py-2 rounded-xl bg-cream-50 border border-cream-300 text-xs text-espresso-700">
-                    </div>
-                    <div class="flex items-center justify-end gap-2">
-                        <button type="button" onclick="deleteService('${srv.id}')" class="px-3 py-2 rounded-xl bg-red-100 hover:bg-red-600 text-red-700 hover:text-white text-xs font-semibold transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-trash"></i> Sil
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        window.updateServiceField = function(id, field, value) {
-            const idx = services.findIndex(s => s.id === id);
-            if (idx !== -1) {
-                services[idx][field] = value;
-                saveServices();
-            }
-        };
-
-        window.deleteService = function(id) {
-            services = services.filter(s => s.id !== id);
-            saveServices();
-        };
-
-        document.getElementById('admin-add-service-form').addEventListener('submi
+             
